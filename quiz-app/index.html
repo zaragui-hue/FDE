@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#172744" />
+    <meta name="description" content="人工智能应用 FDE 工程师题库：看解答、刷题和错题复习。" />
+    <title>FDE 刷题手册</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="questions.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <div><strong>FDE 刷题手册</strong><small>AI 应用工程师题库</small></div>
+        </div>
+        <p class="rail-label">学习路径</p>
+        <nav class="side-nav" aria-label="页面">
+          <button class="nav-item active" data-view="home" type="button"><span class="nav-dot"></span>总览</button>
+          <button class="nav-item" data-view="study" type="button"><span class="nav-dot"></span>看解答</button>
+          <button class="nav-item" data-view="quiz" type="button"><span class="nav-dot"></span>刷题</button>
+          <button class="nav-item" data-view="wrong" type="button"><span class="nav-dot"></span>错题复习</button>
+        </nav>
+        <div class="rail-bottom">
+          <p>进度保存在这台设备</p>
+          <button class="text-link" data-view="backup" type="button">备份与导入 <span aria-hidden="true">↗</span></button>
+        </div>
+      </aside>
+
+      <main class="main-content" id="main-content">
+        <header class="topbar">
+          <div class="topbar-label"><span class="live-dot"></span> 你的学习空间</div>
+          <button class="topbar-backup" data-view="backup" type="button">备份进度</button>
+        </header>
+        <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+        <section class="view active" id="view-home" aria-labelledby="home-title">
+          <div class="hero">
+            <div class="hero-copy">
+              <p class="eyebrow light">人工智能应用 FDE 工程师 · 题库练习</p>
+              <h1 id="home-title">先看懂，<br />再练熟。</h1>
+              <p class="hero-description">答案可以直接看，题也可以随时刷。按自己的节奏，从任意一题开始。</p>
+            </div>
+            <div class="hero-seal" aria-label="共 210 道题"><span>210</span><small>道真题</small></div>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">开始学习</p><h2>今天想怎么学？</h2></div></div>
+          <div class="mode-grid">
+            <button class="mode-card mode-card-study" data-view="study" type="button">
+              <span class="mode-number">01 / 理解</span>
+              <strong>看解答</strong>
+              <span class="mode-description">打开题目就能看到正确答案与解析，适合先建立知识框架。</span>
+              <span class="mode-action">进入看解答 <span aria-hidden="true">↗</span></span>
+            </button>
+            <button class="mode-card mode-card-quiz" data-view="quiz" type="button">
+              <span class="mode-number">02 / 检验</span>
+              <strong>开始刷题</strong>
+              <span class="mode-description">先作答，再核对解析。答错的题会自动留在错题复习里。</span>
+              <span class="mode-action">进入刷题 <span aria-hidden="true">↗</span></span>
+            </button>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel progress-panel" aria-labelledby="progress-title">
+              <div class="panel-head"><div><p class="eyebrow">本机记录</p><h2 id="progress-title">学习进度</h2></div><span class="panel-meta">共 210 题</span></div>
+              <div class="stat-row">
+                <div><strong id="stat-viewed">0</strong><span>已看解答</span></div>
+                <div><strong id="stat-answered">0</strong><span>已作答</span></div>
+                <div><strong id="stat-wrong">0</strong><span>待复习</span></div>
+              </div>
+              <div class="progress-track" aria-label="题型分布"><span class="seg-single"></span><span class="seg-multiple"></span><span class="seg-judgment"></span><span class="seg-short"></span></div>
+              <div class="type-legend"><span><i class="legend-single"></i>单选 80</span><span><i class="legend-multiple"></i>多选 40</span><span><i class="legend-judgment"></i>判断 80</span><span><i class="legend-short"></i>简答 10</span></div>
+            </section>
+            <section class="panel return-panel" aria-labelledby="return-title">
+              <p class="eyebrow">继续上次</p>
+              <h2 id="return-title">接着往下走</h2>
+              <p id="resume-copy">还没有学习记录。从一道题开始就好。</p>
+              <div class="return-actions"><button type="button" class="small-button" data-view="study">继续看解答</button><button type="button" class="small-button ghost" data-view="quiz">继续刷题</button></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-study" aria-labelledby="study-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">答案随时可见</p><h1 id="study-title">看解答</h1><p>先理解题目，再决定何时练习。</p></div><button type="button" class="outline-button" data-view="quiz">切到刷题 <span aria-hidden="true">↗</span></button></div>
+          <div class="toolbar"><label>题型 <select id="study-type"><option value="all">全部题型</option><option value="single">单选题</option><option value="multiple">多选题</option><option value="judgment">判断题</option><option value="short">简答题</option></select></label><button type="button" class="plain-button" id="open-index">题目目录</button></div>
+          <div id="study-content" class="question-container"></div>
+        </section>
+
+        <section class="view" id="view-quiz" aria-labelledby="quiz-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">做完再看答案</p><h1 id="quiz-title">刷题</h1><p>每次只做一题，提交后立刻核对解析。</p></div><button type="button" class="outline-button" data-view="study">切到看解答 <span aria-hidden="true">↗</span></button></div>
+          <div class="toolbar"><label>题型 <select id="quiz-type"><option value="all">全部题型</option><option value="single">单选题</option><option value="multiple">多选题</option><option value="judgment">判断题</option><option value="short">简答题</option></select></label><label>顺序 <select id="quiz-order"><option value="sequential">顺序练习</option><option value="random">随机练习</option></select></label></div>
+          <div id="quiz-content" class="question-container"></div>
+        </section>
+
+        <section class="view" id="view-wrong" aria-labelledby="wrong-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">把不会的题再做一遍</p><h1 id="wrong-title">错题复习</h1><p>做对之后，题目会从待复习列表中移除。</p></div></div>
+          <div id="wrong-content"></div>
+        </section>
+
+        <section class="view" id="view-backup" aria-labelledby="backup-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">只存在当前浏览器</p><h1 id="backup-title">备份进度</h1><p>换设备时，导出文件，再到另一台设备导入。</p></div></div>
+          <div class="backup-layout">
+            <section class="panel backup-card"><span class="backup-number">01</span><h2>保存一份进度</h2><p>下载本机的已看、作答和错题记录。题目本身已经在网页中，无需一起备份。</p><button id="export-progress" type="button" class="primary-button">导出进度文件</button></section>
+            <section class="panel backup-card"><span class="backup-number">02</span><h2>换设备接着学</h2><p>选择之前导出的进度文件。导入会替换这台设备当前的记录。</p><label class="file-button" for="import-progress">选择进度文件</label><input id="import-progress" type="file" accept="application/json,.json" /></section>
+          </div>
+          <p class="storage-note">清除浏览器的网站数据可能删除本机进度，建议定期导出一份。</p>
+        </section>
+      </main>
+
+      <nav class="mobile-nav" aria-label="手机导航">
+        <button class="mobile-nav-item active" data-view="home" type="button"><span class="mobile-symbol">◫</span><span>总览</span></button>
+        <button class="mobile-nav-item" data-view="study" type="button"><span class="mobile-symbol">▤</span><span>看解答</span></button>
+        <button class="mobile-nav-item" data-view="quiz" type="button"><span class="mobile-symbol">◉</span><span>刷题</span></button>
+        <button class="mobile-nav-item" data-view="wrong" type="button"><span class="mobile-symbol">◇</span><span>错题</span></button>
+      </nav>
+    </div>
+
+    <dialog id="question-dialog" class="question-dialog" aria-labelledby="index-title">
+      <div class="dialog-head"><div><p class="eyebrow">快速跳转</p><h2 id="index-title">题目目录</h2></div><button id="close-index" class="close-button" type="button" aria-label="关闭题目目录">×</button></div>
+      <div id="question-index" class="question-index"></div>
+    </dialog>
+  </body>
+</html>
