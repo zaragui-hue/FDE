@@ -45,7 +45,7 @@ def export() -> list[dict[str, object]]:
         questions.append({
             "id": f"M{index:03d}", "type": "multiple", "stem": value(row[0]),
             "options": choices(row, 1, 5),
-            "answer": "".join(char for char in value(row[7]).upper() if char in "ABCDE"),
+            "answer": "".join(sorted(char for char in value(row[7]).upper() if char in "ABCDE")),
             "explanation": value(row[9]), "chapter": value(row[10]),
         })
 

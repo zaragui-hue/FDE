@@ -132,6 +132,7 @@ h1, h2, h3, p { text-wrap: pretty; }
 .answer-heading { margin: 0 0 9px; color: var(--jade); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; }
 .wrong-answer .answer-heading { color: var(--red); }
 .answer-value { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.reference-answer .answer-value { font-size: 14px; font-weight: 500; line-height: 1.85; }
 .explanation { border-top: 1px solid #ccdfdc; margin-top: 17px; padding-top: 16px; color: #465c68; font-size: 13px; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
 .wrong-answer .explanation { border-color: #e5d0cd; }
 .explanation strong { display: block; color: var(--ink); font-size: 12px; margin-bottom: 4px; }
@@ -161,6 +162,7 @@ h1, h2, h3, p { text-wrap: pretty; }
 .backup-card .primary-button, .file-button { margin-top: auto; }
 .file-button { display: inline-flex; align-items: center; min-height: 44px; border-radius: 9px; border: 1px solid var(--jade); padding: 0 18px; color: var(--jade); background: var(--paper); font-size: 13px; font-weight: 700; cursor: pointer; }
 #import-progress { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.recovery-button { margin-top: 18px; }
 .storage-note { color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 20px; }
 .mobile-nav { display: none; }
 
@@ -168,7 +170,7 @@ h1, h2, h3, p { text-wrap: pretty; }
 .question-dialog::backdrop { background: rgba(16, 29, 48, 0.55); }
 .dialog-head { display: flex; justify-content: space-between; align-items: start; border-bottom: 1px solid var(--line); padding-bottom: 15px; margin-bottom: 17px; }
 .dialog-head h2 { margin: 0; font-size: 22px; }
-.close-button { border: 0; background: transparent; font-size: 26px; line-height: 1; color: var(--muted); min-width: 36px; min-height: 36px; }
+.close-button { border: 0; background: transparent; font-size: 26px; line-height: 1; color: var(--muted); min-width: 44px; min-height: 44px; }
 .question-index { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
 .index-button { min-height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 8px; font: 700 12px Georgia, serif; color: var(--ink-soft); }
 .index-button.seen { border-color: #b9d8d2; background: var(--jade-light); color: var(--jade); }
@@ -184,7 +186,8 @@ h1, h2, h3, p { text-wrap: pretty; }
 @media (max-width: 760px) {
   .sidebar { display: none; }
   .main-content { margin: 0; padding: 16px 18px calc(100px + env(safe-area-inset-bottom)); }
-  .topbar { margin-bottom: 15px; height: 40px; }
+  .topbar { margin-bottom: 15px; height: 44px; }
+  .topbar-backup, .small-button, .outline-button, .plain-button, .toolbar select, .self-grades button { min-height: 44px; }
   .hero { min-height: 272px; border-radius: 17px; padding: 29px; }
   .hero h1 { font-size: 44px; }
   .hero-seal { width: 94px; height: 94px; align-self: flex-end; }

@@ -5,25 +5,63 @@ const TYPE_LABELS = {
   short: "简答题",
 };
 const STORAGE_KEY = "fde-quiz-progress-v1";
+const RECOVERY_KEY = "fde-quiz-recovery-v1";
 const SCHEMA_VERSION = 1;
 
 let questions = [];
 let questionById = new Map();
+let bankVersion = "";
 let state = emptyState();
 let currentView = "home";
 let draftSelection = new Set();
 let shortDraft = "";
 let replayId = null;
 let noticeTimer = null;
+let unreadableProgressRaw = null;
+let storageCanWrite = true;
 
 function emptyState() {
   return {
     schema: SCHEMA_VERSION,
+    bankVersion,
     viewed: [],
     attempts: {},
     study: { type: "all", index: 0 },
     quiz: { type: "all", order: "sequential", review: false, ids: [], index: 0 },
   };
+}
+
+function fingerprintQuestions(list) {
+  const content = JSON.stringify(list);
+  let hash = 2166136261;
+  for (let index = 0; index < content.length; index += 1) {
+    hash = Math.imul(hash ^ content.charCodeAt(index), 16777619);
+  }
+  return `fde-${list.length}-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+function validateQuestionBank(list) {
+  const expected = { single: 80, multiple: 40, judgment: 80, short: 10 };
+  if (!Array.isArray(list) || list.length !== 210) return false;
+  const counts = { single: 0, multiple: 0, judgment: 0, short: 0 };
+  const ids = new Set();
+  for (const question of list) {
+    if (!question || !Object.hasOwn(counts, question.type) ||
+        typeof question.id !== "string" || ids.has(question.id) ||
+        !question.stem || !question.chapter) return false;
+    ids.add(question.id);
+    counts[question.type] += 1;
+    if (question.type === "short") {
+      if (!question.reference) return false;
+    } else {
+      if (!Array.isArray(question.options) || !question.explanation ||
+          typeof question.answer !== "string" || !question.answer) return false;
+      const optionKeys = question.options.map((option) => option.key);
+      if (new Set(optionKeys).size !== optionKeys.length ||
+          [...question.answer].some((key) => !optionKeys.includes(key))) return false;
+    }
+  }
+  return Object.entries(expected).every(([type, count]) => counts[type] === count);
 }
 
 function escapeHtml(text) {
@@ -42,6 +80,10 @@ function showNotice(message, error = false, persistent = false) {
 }
 
 function saveState() {
+  if (!storageCanWrite) {
+    showNotice("旧进度无法安全备份，新进度暂时不能保存。请到「备份进度」下载旧记录。", true, true);
+    return false;
+  }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     return true;
@@ -54,12 +96,29 @@ function saveState() {
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    unreadableProgressRaw = localStorage.getItem(RECOVERY_KEY);
     if (!raw) return;
-    const restored = validateProgress(JSON.parse(raw));
-    if (restored) state = restored;
+    let restored = null;
+    try { restored = validateProgress(JSON.parse(raw)); } catch { /* Keep the raw backup below. */ }
+    if (restored) {
+      state = restored;
+      return;
+    }
+    unreadableProgressRaw = raw;
+    try {
+      localStorage.setItem(RECOVERY_KEY, raw);
+    } catch {
+      storageCanWrite = false;
+    }
+    showNotice("原有进度与当前题库不兼容，已保留旧记录。可在「备份进度」下载后检查。", true, true);
   } catch {
-    showNotice("本机进度无法读取，已从空白进度开始。之前的备份文件仍可导入。", true, true);
+    showNotice("本机进度无法读取。你仍可看题，但本次进度可能无法保存。", true, true);
   }
+  updateRecoveryButton();
+}
+
+function updateRecoveryButton() {
+  document.getElementById("export-recovery").hidden = !unreadableProgressRaw;
 }
 
 function validType(value) {
@@ -68,8 +127,10 @@ function validType(value) {
 
 function validateProgress(input) {
   if (!input || input.schema !== SCHEMA_VERSION || !Array.isArray(input.viewed) ||
-      !input.attempts || typeof input.attempts !== "object" ||
-      !input.study || !input.quiz) return null;
+      !input.attempts || typeof input.attempts !== "object" || Array.isArray(input.attempts) ||
+      !input.study || typeof input.study !== "object" ||
+      !input.quiz || typeof input.quiz !== "object" ||
+      (Object.hasOwn(input, "bankVersion") && input.bankVersion !== bankVersion)) return null;
 
   const clean = emptyState();
   if (input.viewed.some((id) => !questionById.has(id))) return null;
@@ -87,6 +148,8 @@ function validateProgress(input) {
       };
     } else {
       if (!Array.isArray(attempt.selected) ||
+          attempt.selected.length === 0 ||
+          (question.type !== "multiple" && attempt.selected.length !== 1) ||
           attempt.selected.some((key) => !question.options.some((option) => option.key === key))) return null;
       const selected = [...new Set(attempt.selected)].sort();
       clean.attempts[id] = { selected, correct: selected.join("") === question.answer };
@@ -151,7 +214,10 @@ function setView(view, preserveReview = false) {
   });
   document.querySelectorAll("[data-view]").forEach((button) => {
     if (button.classList.contains("nav-item") || button.classList.contains("mobile-nav-item")) {
-      button.classList.toggle("active", button.dataset.view === view);
+      const active = button.dataset.view === view;
+      button.classList.toggle("active", active);
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
     }
   });
   if (view === "home") renderHome();
@@ -211,7 +277,7 @@ function answerPanel(question, attempt = null) {
     ? question.type === "short" ? "参考答案" : attempt.correct ? "答对了" : "再看一遍"
     : "正确答案";
   const explanation = question.type === "short" ? "" : `<div class="explanation"><strong>解析</strong>${escapeHtml(question.explanation)}</div>`;
-  return `<div class="answer-panel ${wrong ? "wrong-answer" : ""}"><p class="answer-heading">${heading}</p><p class="answer-value">${escapeHtml(answerText(question))}</p>${explanation}</div>`;
+  return `<div class="answer-panel ${wrong ? "wrong-answer" : ""} ${question.type === "short" ? "reference-answer" : ""}"><p class="answer-heading">${heading}</p><p class="answer-value">${escapeHtml(answerText(question))}</p>${explanation}</div>`;
 }
 
 function navigationFooter(index, total, mode, action = "") {
@@ -334,16 +400,29 @@ function openIndex() {
 }
 
 function exportProgress() {
-  const content = JSON.stringify({ app: "fde-quiz", schema: SCHEMA_VERSION, exportedAt: new Date().toISOString(), progress: state }, null, 2);
+  const content = JSON.stringify({ app: "fde-quiz", schema: SCHEMA_VERSION, bankVersion, exportedAt: new Date().toISOString(), progress: state }, null, 2);
+  downloadJson(content, `FDE刷题进度-${new Date().toISOString().slice(0, 10)}.json`);
+  showNotice("进度文件已下载。请保存在你容易找到的位置。");
+}
+
+function downloadJson(content, filename) {
   const url = URL.createObjectURL(new Blob([content], { type: "application/json" }));
   const link = document.createElement("a");
   link.href = url;
-  link.download = `FDE刷题进度-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = filename;
   document.body.append(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showNotice("进度文件已下载。请保存在你容易找到的位置。");
+}
+
+function decodeProgressBackup(content) {
+  const parsed = JSON.parse(content);
+  if (!parsed || parsed.app !== "fde-quiz" || parsed.schema !== SCHEMA_VERSION) throw new Error("format");
+  if (Object.hasOwn(parsed, "bankVersion") && parsed.bankVersion !== bankVersion) throw new Error("bank");
+  const restored = validateProgress(parsed.progress);
+  if (!restored) throw new Error("invalid");
+  return restored;
 }
 
 async function importProgress(file) {
@@ -352,10 +431,7 @@ async function importProgress(file) {
     return;
   }
   try {
-    const parsed = JSON.parse(await file.text());
-    if (parsed.app !== "fde-quiz" || parsed.schema !== SCHEMA_VERSION) throw new Error("format");
-    const restored = validateProgress(parsed.progress);
-    if (!restored) throw new Error("invalid");
+    const restored = decodeProgressBackup(await file.text());
     if (!window.confirm(`导入后将替换本机进度。文件中有 ${restored.viewed.length} 道已看题、${Object.values(restored.attempts).filter((attempt) => attempt.correct !== null).length} 道已作答题。确定导入吗？`)) return;
     state = restored;
     draftSelection = new Set();
@@ -364,7 +440,11 @@ async function importProgress(file) {
     saveState();
     showNotice("进度已导入。可以继续看解答或刷题。");
     setView("home");
-  } catch {
+  } catch (error) {
+    if (error.message === "bank") {
+      showNotice("无法导入：这份进度属于另一版题库，现有进度没有更改。", true);
+      return;
+    }
     showNotice("无法导入：文件不是此题库的有效进度记录。现有进度没有更改。", true);
   }
 }
@@ -449,6 +529,11 @@ function bindEvents() {
   document.getElementById("open-index").addEventListener("click", openIndex);
   document.getElementById("close-index").addEventListener("click", () => document.getElementById("question-dialog").close());
   document.getElementById("export-progress").addEventListener("click", exportProgress);
+  document.getElementById("export-recovery").addEventListener("click", () => {
+    if (!unreadableProgressRaw) return;
+    downloadJson(unreadableProgressRaw, `FDE旧进度-${new Date().toISOString().slice(0, 10)}.json`);
+    showNotice("旧记录已下载。请保留这份文件。");
+  });
   document.getElementById("import-progress").addEventListener("change", async (event) => {
     await importProgress(event.target.files[0]);
     event.target.value = "";
@@ -468,9 +553,12 @@ async function start() {
       if (!response.ok) throw new Error(String(response.status));
       questions = await response.json();
     }
-    if (questions.length !== 210) throw new Error("question count");
+    if (!validateQuestionBank(questions)) throw new Error("question bank");
+    bankVersion = fingerprintQuestions(questions);
+    state = emptyState();
     questionById = new Map(questions.map((question) => [question.id, question]));
     loadState();
+    updateRecoveryButton();
     ensureQuizQueue();
     renderHome();
   } catch {
@@ -478,4 +566,20 @@ async function start() {
   }
 }
 
-start();
+if (typeof window === "undefined") {
+  module.exports = {
+    emptyState,
+    fingerprintQuestions,
+    validateQuestionBank,
+    validateProgress,
+    decodeProgressBackup,
+    initializeQuestionBankForTests(list) {
+      questions = list;
+      questionById = new Map(list.map((question) => [question.id, question]));
+      bankVersion = fingerprintQuestions(list);
+      return bankVersion;
+    },
+  };
+} else {
+  start();
+}

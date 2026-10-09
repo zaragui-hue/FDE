@@ -20,7 +20,7 @@
         </div>
         <p class="rail-label">学习路径</p>
         <nav class="side-nav" aria-label="页面">
-          <button class="nav-item active" data-view="home" type="button"><span class="nav-dot"></span>总览</button>
+          <button class="nav-item active" data-view="home" type="button" aria-current="page"><span class="nav-dot"></span>总览</button>
           <button class="nav-item" data-view="study" type="button"><span class="nav-dot"></span>看解答</button>
           <button class="nav-item" data-view="quiz" type="button"><span class="nav-dot"></span>刷题</button>
           <button class="nav-item" data-view="wrong" type="button"><span class="nav-dot"></span>错题复习</button>
@@ -45,7 +45,7 @@
               <h1 id="home-title">先看懂，<br />再练熟。</h1>
               <p class="hero-description">答案可以直接看，题也可以随时刷。按自己的节奏，从任意一题开始。</p>
             </div>
-            <div class="hero-seal" aria-label="共 210 道题"><span>210</span><small>道真题</small></div>
+            <div class="hero-seal" aria-label="共 210 道题"><span>210</span><small>道练习题</small></div>
           </div>
 
           <div class="section-heading"><div><p class="eyebrow">开始学习</p><h2>今天想怎么学？</h2></div></div>
@@ -107,12 +107,13 @@
             <section class="panel backup-card"><span class="backup-number">01</span><h2>保存一份进度</h2><p>下载本机的已看、作答和错题记录。题目本身已经在网页中，无需一起备份。</p><button id="export-progress" type="button" class="primary-button">导出进度文件</button></section>
             <section class="panel backup-card"><span class="backup-number">02</span><h2>换设备接着学</h2><p>选择之前导出的进度文件。导入会替换这台设备当前的记录。</p><label class="file-button" for="import-progress">选择进度文件</label><input id="import-progress" type="file" accept="application/json,.json" /></section>
           </div>
+          <button id="export-recovery" type="button" class="secondary-button recovery-button" hidden>下载保留的旧记录</button>
           <p class="storage-note">清除浏览器的网站数据可能删除本机进度，建议定期导出一份。</p>
         </section>
       </main>
 
       <nav class="mobile-nav" aria-label="手机导航">
-        <button class="mobile-nav-item active" data-view="home" type="button"><span class="mobile-symbol">◫</span><span>总览</span></button>
+        <button class="mobile-nav-item active" data-view="home" type="button" aria-current="page"><span class="mobile-symbol">◫</span><span>总览</span></button>
         <button class="mobile-nav-item" data-view="study" type="button"><span class="mobile-symbol">▤</span><span>看解答</span></button>
         <button class="mobile-nav-item" data-view="quiz" type="button"><span class="mobile-symbol">◉</span><span>刷题</span></button>
         <button class="mobile-nav-item" data-view="wrong" type="button"><span class="mobile-symbol">◇</span><span>错题</span></button>
