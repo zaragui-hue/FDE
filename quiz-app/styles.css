@@ -240,6 +240,33 @@ h1, h2, h3, p { text-wrap: pretty; }
   .question-index { grid-template-columns: repeat(5, 1fr); }
 }
 
+@media (max-width: 760px) {
+  #view-study .page-heading,
+  #view-quiz .page-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 2px 0 12px;
+  }
+  #view-study .page-heading .eyebrow,
+  #view-study .page-heading p:last-child,
+  #view-quiz .page-heading .eyebrow,
+  #view-quiz .page-heading p:last-child { display: none; }
+  #view-study .page-heading h1,
+  #view-quiz .page-heading h1 {
+    font-size: 26px;
+    line-height: 1.25;
+    margin: 0;
+  }
+  #view-study .page-heading .outline-button,
+  #view-quiz .page-heading .outline-button {
+    min-height: 40px;
+    margin: 0;
+    padding-inline: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
