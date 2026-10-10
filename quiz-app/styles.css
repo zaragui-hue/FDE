@@ -1,5 +1,5 @@
 /* Visual system: cool paper #F2F5F8, deep ink #172744, jade #187D78.
-   A four-part question map encodes the real 80/40/80/10 distribution. */
+   The four-part question map reflects the current workbook totals. */
 :root {
   --page: #f2f5f8;
   --paper: #ffffff;
@@ -90,7 +90,7 @@ h1, h2, h3, p { text-wrap: pretty; }
 .stat-row span { display: block; color: var(--muted); font-size: 11px; margin-top: 7px; }
 .progress-track { width: 100%; height: 8px; display: flex; gap: 3px; border-radius: 8px; overflow: hidden; }
 .progress-track span { height: 100%; }
-.seg-single { width: 38.095%; background: #187d78; }.seg-multiple { width: 19.047%; background: #6aac9d; }.seg-judgment { width: 38.095%; background: #8fa4bd; }.seg-short { width: 4.761%; background: #e4a84d; }
+.seg-single { background: #187d78; }.seg-multiple { background: #6aac9d; }.seg-judgment { background: #8fa4bd; }.seg-short { background: #e4a84d; }
 .type-legend { display: flex; flex-wrap: wrap; gap: 10px 15px; margin-top: 13px; color: var(--muted); font-size: 11px; }
 .type-legend span { white-space: nowrap; }.type-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
 .legend-single { background: #187d78; }.legend-multiple { background: #6aac9d; }.legend-judgment { background: #8fa4bd; }.legend-short { background: #e4a84d; }

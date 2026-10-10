@@ -1,6 +1,6 @@
 # FDE 刷题手册
 
-这是一个可在手机和电脑浏览器打开的静态刷题网页，使用 Excel 题库中的 210 道题：80 道单选、40 道多选、80 道判断、10 道简答。
+这是一个可在手机和电脑浏览器打开的静态刷题网页。四份 Excel 逐题核对后共收录 211 道不同问法：80 道单选、41 道多选、80 道判断、10 道简答。多出的 1 道是「工信人才实名系统」中与原始题目问法不同的多选题。
 
 ## 使用方式
 
@@ -23,13 +23,13 @@ python3 -m http.server 8765 --directory quiz-app
 
 ## 从 Excel 更新题库
 
-源工作簿放在 `人工智能应用FDE工程师题库/人工智能应用FDE工程师测试题目 260827.xlsx`。安装 `openpyxl` 后运行：
+将四份源工作簿放在 `人工智能应用FDE工程师题库/`。安装 `openpyxl` 后运行：
 
 ```sh
 python3 scripts/export_questions.py
 ```
 
-脚本会校验题型数量、题目 ID、答案和解析，并生成 `quiz-app/questions.json` 与 `quiz-app/questions.js`。提交这两个生成文件即可更新网页题库，不要提交原始 Excel。
+脚本会逐题核对四份工作簿，把不同问法作为独立题目；若发现选项、答案或简答参考答案不一致，会停下来等待人工检查。然后生成 `quiz-app/questions.json` 与 `quiz-app/questions.js`。可以先运行 `python3 scripts/audit_question_banks.py` 查看差异。提交两个生成文件即可更新网页题库，不要提交原始 Excel。
 
 ## 发布到 GitHub Pages
 

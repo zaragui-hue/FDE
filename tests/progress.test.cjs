@@ -7,8 +7,14 @@ const bankVersion = app.initializeQuestionBankForTests(questions);
 
 test("published bank contains the expected complete question set", () => {
   assert.equal(app.validateQuestionBank(questions), true);
-  assert.equal(questions.length, 210);
-  assert.equal(new Set(questions.map((question) => question.id)).size, 210);
+  assert.equal(questions.length, 211);
+  assert.equal(new Set(questions.map((question) => question.id)).size, 211);
+  assert.equal(questions.filter((question) => question.type === "multiple").length, 41);
+  assert.equal(questions.at(-1).id, "M041");
+  assert.equal(questions.at(-1).variantOf, "M038");
+  const original = questions.find((question) => question.id === "M038");
+  assert.deepEqual(questions.at(-1).options, original.options);
+  assert.equal(questions.at(-1).answer, original.answer);
 });
 
 test("bank fingerprint changes when question content changes", () => {
@@ -23,10 +29,19 @@ test("progress validates against the current bank and preserves prototype record
   delete legacy.bankVersion;
   legacy.viewed = ["S001", "S002"];
   legacy.attempts.S001 = { selected: ["D"], correct: true };
-  legacy.quiz.ids = questions.map((question) => question.id);
+  legacy.quiz.ids = questions.slice(0, 210).map((question) => question.id);
   assert.equal(app.validateProgress(legacy).bankVersion, bankVersion);
   assert.deepEqual(app.validateProgress(legacy).viewed, ["S001", "S002"]);
   assert.deepEqual(Object.keys(app.validateProgress(legacy).attempts), ["S001"]);
+
+  const previousBank = app.fingerprintQuestions(questions.slice(0, 210));
+  assert.equal(previousBank, "fde-210-aeea5465");
+  const earlier = { ...legacy, bankVersion: previousBank };
+  assert.equal(app.validateProgress(earlier).bankVersion, bankVersion);
+  const extended = app.extendQuizQueue(earlier.quiz.ids, questions.map((question) => question.id), "sequential");
+  assert.equal(extended.length, 211);
+  assert.equal(extended.at(-1), "M041");
+  assert.deepEqual(extended.slice(0, 210), earlier.quiz.ids);
 });
 
 test("another question bank and malformed answers cannot replace progress", () => {
@@ -51,6 +66,11 @@ test("backup import accepts current and legacy files, rejects other banks", () =
   delete legacy.bankVersion;
   delete legacy.progress.bankVersion;
   assert.deepEqual(app.decodeProgressBackup(JSON.stringify(legacy)).viewed, ["S001"]);
+
+  const previousBank = app.fingerprintQuestions(questions.slice(0, 210));
+  const previous = { ...current, bankVersion: previousBank,
+    progress: { ...progress, bankVersion: previousBank, quiz: { ...progress.quiz, ids: questions.slice(0, 210).map((question) => question.id) } } };
+  assert.deepEqual(app.decodeProgressBackup(JSON.stringify(previous)).viewed, ["S001"]);
 
   assert.throws(() => app.decodeProgressBackup(JSON.stringify({ ...current, bankVersion: "other" })), /bank/);
   assert.throws(() => app.decodeProgressBackup(JSON.stringify({ ...current, progress: { ...progress, viewed: ["bad-id"] } })), /invalid/);

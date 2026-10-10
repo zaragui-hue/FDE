@@ -7,6 +7,9 @@ const TYPE_LABELS = {
 const STORAGE_KEY = "fde-quiz-progress-v1";
 const RECOVERY_KEY = "fde-quiz-recovery-v1";
 const SCHEMA_VERSION = 1;
+const COMPATIBLE_BANK_VERSIONS = new Map([
+  ["fde-211-7d069eed", new Set(["fde-210-aeea5465"])],
+]);
 
 let questions = [];
 let questionById = new Map();
@@ -41,8 +44,8 @@ function fingerprintQuestions(list) {
 }
 
 function validateQuestionBank(list) {
-  const expected = { single: 80, multiple: 40, judgment: 80, short: 10 };
-  if (!Array.isArray(list) || list.length !== 210) return false;
+  const expectedMinimum = { single: 80, multiple: 41, judgment: 80, short: 10 };
+  if (!Array.isArray(list) || list.length < 211) return false;
   const counts = { single: 0, multiple: 0, judgment: 0, short: 0 };
   const ids = new Set();
   for (const question of list) {
@@ -61,7 +64,14 @@ function validateQuestionBank(list) {
           [...question.answer].some((key) => !optionKeys.includes(key))) return false;
     }
   }
-  return Object.entries(expected).every(([type, count]) => counts[type] === count);
+  const prefixes = { single: "S", multiple: "M", judgment: "J", short: "A" };
+  return Object.entries(expectedMinimum).every(([type, count]) =>
+    counts[type] >= count && Array.from({ length: count }, (_, index) =>
+      `${prefixes[type]}${String(index + 1).padStart(3, "0")}`).every((id) => ids.has(id)));
+}
+
+function isCompatibleBankVersion(version) {
+  return version === bankVersion || COMPATIBLE_BANK_VERSIONS.get(bankVersion)?.has(version) === true;
 }
 
 function escapeHtml(text) {
@@ -130,7 +140,7 @@ function validateProgress(input) {
       !input.attempts || typeof input.attempts !== "object" || Array.isArray(input.attempts) ||
       !input.study || typeof input.study !== "object" ||
       !input.quiz || typeof input.quiz !== "object" ||
-      (Object.hasOwn(input, "bankVersion") && input.bankVersion !== bankVersion)) return null;
+      (Object.hasOwn(input, "bankVersion") && !isCompatibleBankVersion(input.bankVersion))) return null;
 
   const clean = emptyState();
   if (input.viewed.some((id) => !questionById.has(id))) return null;
@@ -182,6 +192,14 @@ function shuffle(ids) {
   return copy;
 }
 
+function extendQuizQueue(ids, pool, order) {
+  if (!ids.length || new Set(ids).size !== ids.length ||
+      ids.some((id) => !pool.includes(id))) return null;
+  if (ids.length === pool.length) return ids;
+  const additions = pool.filter((id) => !ids.includes(id));
+  return order === "random" ? [...ids, ...shuffle(additions)] : pool;
+}
+
 function resetQuizQueue() {
   const ids = filteredQuestions(state.quiz.type).map((question) => question.id);
   state.quiz.review = false;
@@ -199,7 +217,13 @@ function ensureQuizQueue() {
     return;
   }
   const pool = filteredQuestions(state.quiz.type).map((question) => question.id);
-  if (state.quiz.ids.length !== pool.length || !state.quiz.ids.every((id) => pool.includes(id))) resetQuizQueue();
+  if (state.quiz.ids.length !== pool.length || !state.quiz.ids.every((id) => pool.includes(id))) {
+    const extended = extendQuizQueue(state.quiz.ids, pool, state.quiz.order);
+    if (extended) {
+      state.quiz.ids = extended;
+      saveState();
+    } else resetQuizQueue();
+  }
   state.quiz.index = Math.min(state.quiz.index, Math.max(state.quiz.ids.length - 1, 0));
 }
 
@@ -238,6 +262,15 @@ function answeredCount() {
 }
 
 function renderHome() {
+  const counts = Object.fromEntries(Object.keys(TYPE_LABELS).map((type) =>
+    [type, questions.filter((question) => question.type === type).length]));
+  document.getElementById("hero-total").textContent = questions.length;
+  document.getElementById("hero-seal").setAttribute("aria-label", `共 ${questions.length} 道题`);
+  document.getElementById("progress-total").textContent = `共 ${questions.length} 题`;
+  for (const [type, count] of Object.entries(counts)) {
+    document.getElementById(`legend-${type}`).textContent = `${TYPE_LABELS[type].replace("题", "")} ${count}`;
+    document.querySelector(`.seg-${type}`).style.width = `${count / questions.length * 100}%`;
+  }
   document.getElementById("stat-viewed").textContent = state.viewed.length;
   document.getElementById("stat-answered").textContent = answeredCount();
   document.getElementById("stat-wrong").textContent = wrongIds().length;
@@ -258,7 +291,8 @@ function questionHeader(question, index, total) {
 }
 
 function questionIntro(question) {
-  return `<p class="question-chapter">${escapeHtml(question.chapter)}</p><h2 class="question-stem">${escapeHtml(question.stem)}</h2>`;
+  const source = question.sourceNote ? ` · ${question.sourceNote}` : "";
+  return `<p class="question-chapter">${escapeHtml(question.chapter + source)}</p><h2 class="question-stem">${escapeHtml(question.stem)}</h2>`;
 }
 
 function optionsHtml(question, selected = [], showResult = false) {
@@ -419,7 +453,7 @@ function downloadJson(content, filename) {
 function decodeProgressBackup(content) {
   const parsed = JSON.parse(content);
   if (!parsed || parsed.app !== "fde-quiz" || parsed.schema !== SCHEMA_VERSION) throw new Error("format");
-  if (Object.hasOwn(parsed, "bankVersion") && parsed.bankVersion !== bankVersion) throw new Error("bank");
+  if (Object.hasOwn(parsed, "bankVersion") && !isCompatibleBankVersion(parsed.bankVersion)) throw new Error("bank");
   const restored = validateProgress(parsed.progress);
   if (!restored) throw new Error("invalid");
   return restored;
@@ -573,6 +607,7 @@ if (typeof window === "undefined") {
     validateQuestionBank,
     validateProgress,
     decodeProgressBackup,
+    extendQuizQueue,
     initializeQuestionBankForTests(list) {
       questions = list;
       questionById = new Map(list.map((question) => [question.id, question]));

@@ -7,6 +7,8 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
+from audit_question_banks import audit, normalized
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "人工智能应用FDE工程师题库" / "人工智能应用FDE工程师测试题目 260827.xlsx"
@@ -72,6 +74,36 @@ def export() -> list[dict[str, object]]:
     counts = {kind: sum(question["type"] == kind for question in questions) for kind in expected}
     if counts != expected or len({question["id"] for question in questions}) != 210:
         raise ValueError(f"Unexpected question counts or duplicate IDs: {counts}")
+
+    # The three export workbooks mostly repeat the source. Keep a different
+    # wording as a separate question while reusing the matching explanation.
+    _, differences = audit(verbose=False)
+    seen = {
+        (question["type"], normalized(str(question["stem"])))
+        for question in questions
+    }
+    prefixes = {"single": "S", "multiple": "M", "judgment": "J", "short": "A"}
+    for label, alternate, changed in differences:
+        if changed.get("options") or changed.get("answer") or changed.get("reference"):
+            raise ValueError(f"Review answer/option difference: {label} {alternate.kind} #{alternate.ordinal}")
+        signature = (alternate.kind, normalized(alternate.stem))
+        if not changed.get("stem") or signature in seen:
+            continue
+        original_id = f"{prefixes[alternate.kind]}{alternate.ordinal:03d}"
+        original = next(question for question in questions if question["id"] == original_id)
+        next_number = sum(question["type"] == alternate.kind for question in questions) + 1
+        questions.append({
+            **original,
+            "id": f"{prefixes[alternate.kind]}{next_number:03d}",
+            "stem": alternate.stem,
+            "variantOf": original_id,
+            "sourceNote": f"{label} · 不同问法",
+        })
+        seen.add(signature)
+
+    counts = {kind: sum(question["type"] == kind for question in questions) for kind in expected}
+    if len({question["id"] for question in questions}) != len(questions):
+        raise ValueError("Duplicate IDs after adding wording variants")
 
     for question in questions:
         if not question["stem"] or not question["chapter"]:
