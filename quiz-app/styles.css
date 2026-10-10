@@ -50,6 +50,7 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 .main-content { max-width: 1390px; margin-left: 248px; padding: 26px clamp(25px, 4.2vw, 72px) 76px; }
 .topbar { display: flex; align-items: center; justify-content: space-between; height: 44px; margin-bottom: 28px; }
 .topbar-label { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+.topbar-label-mobile, .topbar-mode { display: none; }
 .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 0 4px var(--jade-light); }
 .topbar-backup { border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); border-radius: 9px; min-height: 36px; padding: 0 13px; font-size: 12px; font-weight: 600; }
 .topbar-backup:hover { border-color: var(--jade); color: var(--jade); }
@@ -241,30 +242,22 @@ h1, h2, h3, p { text-wrap: pretty; }
 }
 
 @media (max-width: 760px) {
+  .main-content[data-current-view="study"] .topbar,
+  .main-content[data-current-view="quiz"] .topbar { justify-content: flex-start; gap: 8px; margin-bottom: 12px; }
+  .main-content[data-current-view="study"] .topbar-label,
+  .main-content[data-current-view="quiz"] .topbar-label { flex: none; gap: 5px; font-size: 11px; letter-spacing: 0; }
+  .main-content[data-current-view="study"] .topbar-label-desktop,
+  .main-content[data-current-view="quiz"] .topbar-label-desktop { display: none; }
+  .main-content[data-current-view="study"] .topbar-label-mobile,
+  .main-content[data-current-view="quiz"] .topbar-label-mobile { display: inline; }
+  .main-content[data-current-view="study"] .topbar-backup,
+  .main-content[data-current-view="quiz"] .topbar-backup { flex: none; min-height: 40px; padding-inline: 7px; font-size: 11px; }
+  .main-content[data-current-view="study"] .topbar-mode-study,
+  .main-content[data-current-view="quiz"] .topbar-mode-quiz { display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; flex: 1; }
+  .topbar-mode h1 { font-family: "Songti SC", "Noto Serif CJK SC", serif; font-size: 18px; line-height: 1.2; letter-spacing: -0.05em; white-space: nowrap; margin: 0; }
+  .topbar-mode .outline-button { flex: none; min-height: 40px; padding-inline: 7px; font-size: 11px; }
   #view-study .page-heading,
-  #view-quiz .page-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 2px 0 12px;
-  }
-  #view-study .page-heading .eyebrow,
-  #view-study .page-heading p:last-child,
-  #view-quiz .page-heading .eyebrow,
-  #view-quiz .page-heading p:last-child { display: none; }
-  #view-study .page-heading h1,
-  #view-quiz .page-heading h1 {
-    font-size: 26px;
-    line-height: 1.25;
-    margin: 0;
-  }
-  #view-study .page-heading .outline-button,
-  #view-quiz .page-heading .outline-button {
-    min-height: 40px;
-    margin: 0;
-    padding-inline: 12px;
-  }
+  #view-quiz .page-heading { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

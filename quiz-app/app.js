@@ -231,6 +231,7 @@ function setView(view, preserveReview = false) {
   if (!document.getElementById(`view-${view}`)) return;
   if (view === "quiz" && state.quiz.review && !preserveReview) resetQuizQueue();
   currentView = view;
+  document.getElementById("main-content").dataset.currentView = view;
   document.querySelectorAll(".view").forEach((section) => {
     const active = section.id === `view-${view}`;
     section.classList.toggle("active", active);
@@ -339,7 +340,9 @@ function renderStudy() {
 
 function renderQuiz() {
   ensureQuizQueue();
-  document.getElementById("quiz-title").textContent = state.quiz.review ? "错题复习" : "刷题";
+  const quizTitle = state.quiz.review ? "错题复习" : "刷题";
+  document.getElementById("quiz-title").textContent = quizTitle;
+  document.getElementById("mobile-quiz-title").textContent = quizTitle;
   document.getElementById("quiz-type").value = state.quiz.type;
   document.getElementById("quiz-order").value = state.quiz.order;
   const question = questionById.get(state.quiz.ids[state.quiz.index]);

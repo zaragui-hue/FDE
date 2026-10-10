@@ -7,9 +7,9 @@
     <meta name="description" content="人工智能应用 FDE 工程师题库：看解答、刷题和错题复习。" />
     <title>FDE 刷题手册</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=mobile-header-3" />
     <script src="questions.js" defer></script>
-    <script src="app.js" defer></script>
+    <script src="app.js?v=mobile-header-3" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -33,8 +33,10 @@
 
       <main class="main-content" id="main-content">
         <header class="topbar">
-          <div class="topbar-label"><span class="live-dot"></span> 你的学习空间</div>
+          <div class="topbar-label"><span class="live-dot"></span><span class="topbar-label-desktop">你的学习空间</span><span class="topbar-label-mobile">学习空间</span></div>
           <button class="topbar-backup" data-view="backup" type="button">备份进度</button>
+          <div class="topbar-mode topbar-mode-study"><h1>看解答</h1><button type="button" class="outline-button" data-view="quiz">切到刷题 ↗</button></div>
+          <div class="topbar-mode topbar-mode-quiz"><h1 id="mobile-quiz-title">刷题</h1><button type="button" class="outline-button" data-view="study">切到看解答 ↗</button></div>
         </header>
         <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
 
